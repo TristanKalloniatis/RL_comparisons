@@ -47,13 +47,11 @@ def run_experiment(env, agent, name, log_object, episodes, episodes_for_logging,
     for episode in range(episodes):
         rewards.append(play_and_train_network(env, agent, actor_optimiser, critic_optimiser))
         if episode % episodes_for_logging == 0 and episode != 0:
-            write_log('Computed {0} out of {1} episodes for {2} in {3} seconds'.format(episode, episodes, name,
-                                                                                       (
-                                                                                                   datetime.now() - now_for_episode).total_seconds()),
-                      log_object)
+            write_log('Computed {0} out of {1} episodes for {2} in {3} seconds'.format(episode, episodes, name, (datetime.now() - now_for_episode).total_seconds()), log_object)
             now_for_episode = datetime.now()
             write_log('Mean reward: {0}'.format(np.mean(rewards[-episodes_for_logging:])), log_object)
     return rewards
+
 
 def train_agent(epsilon, discount_factor, env, agent_name, log_object, dqn_type='duelling', replay_type='prioritised'):
     write_log('Running agent {0}'.format(agent_name), log_object)
@@ -62,7 +60,9 @@ def train_agent(epsilon, discount_factor, env, agent_name, log_object, dqn_type=
     state_dim = env.observation_space.shape[0]
     if dqn_type == 'duelling':
         agent = model_classes.DuellingDQN(epsilon, discount_factor, state_dim, n_actions)
-        optimiser = torch.optim.Adam([{'params': agent.online_feature_network.parameters()}, {'params': agent.online_value_network.parameters()}, {'params': agent.online_advantage_network.parameters()}])
+        optimiser = torch.optim.Adam(
+            [{'params': agent.online_feature_network.parameters()}, {'params': agent.online_value_network.parameters()},
+             {'params': agent.online_advantage_network.parameters()}])
     else:
         agent = model_classes.DoubleDQN(epsilon, discount_factor, state_dim, n_actions)
         optimiser = torch.optim.Adam(agent.online_network.parameters())
@@ -80,8 +80,7 @@ def train_agent(epsilon, discount_factor, env, agent_name, log_object, dqn_type=
         replay.add(s, a, r, next_s, done)
         if len(replay) >= data_hyperparameters.REPLAY_BATCH_SIZE:
             s_batch, a_batch, r_batch, next_s_batch, done_batch, i_batch, w_batch = replay.sample(data_hyperparameters.REPLAY_BATCH_SIZE)
-            batch_loss = agent.calculate_temporal_difference_loss(s_batch, a_batch, r_batch, next_s_batch, done_batch,
-                                                                  w_batch)
+            batch_loss = agent.calculate_temporal_difference_loss(s_batch, a_batch, r_batch, next_s_batch, done_batch, w_batch)
             if replay_type == 'prioritised':
                 with torch.no_grad():
                     new_priorities = batch_loss + data_hyperparameters.PRIORITY_ADJUSTMENT_EPSILON

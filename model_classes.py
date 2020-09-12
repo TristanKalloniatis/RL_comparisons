@@ -24,7 +24,7 @@ def argmax(arr):  # I do this just because I want to randomly break ties, otherw
 
 
 class Replay:
-    def __init__(self, max_size):
+    def __init__(self, max_size=data_hyperparameters.REPLAY_CAPACITY):
         self.max_size = max_size
         self.data = []
         self.insertion_index = 0
@@ -53,7 +53,7 @@ class Replay:
 
 
 class PrioritisedReplay(Replay):
-    def __init__(self, max_size, beta=data_hyperparameters.INITIAL_BETA,
+    def __init__(self, max_size=data_hyperparameters.REPLAY_CAPACITY, beta=data_hyperparameters.INITIAL_BETA,
                  probability_power=data_hyperparameters.PROBABILITY_POWER):
         super().__init__(max_size)
         self.probability_power = probability_power
@@ -61,7 +61,7 @@ class PrioritisedReplay(Replay):
         self.beta = beta
 
     def adjust_beta(self):
-        self.beta += 1e-3
+        self.beta += data_hyperparameters.BETA_ADJUSTMENT
         if self.beta > 1.:
             self.beta = 1
 
@@ -91,8 +91,9 @@ class PrioritisedReplay(Replay):
 
 
 class DoubleDQN:
-    def __init__(self, epsilon, discount_factor, state_dimension, num_actions,
-                 hidden_size=data_hyperparameters.HIDDEN_SIZE, use_cuda=data_hyperparameters.USE_CUDA):
+    def __init__(self, state_dimension, num_actions, epsilon=data_hyperparameters.INITIAL_EPSILON,
+                 discount_factor=data_hyperparameters.DISCOUNT_FACTOR, hidden_size=data_hyperparameters.HIDDEN_SIZE,
+                 use_cuda=data_hyperparameters.USE_CUDA):
         self.epsilon = epsilon
         self.discount_factor = discount_factor
         self.state_dimension = state_dimension
@@ -156,8 +157,9 @@ class DoubleDQN:
 
 
 class DuellingDQN:
-    def __init__(self, epsilon, discount_factor, state_dimension, num_actions,
-                 hidden_size=data_hyperparameters.HIDDEN_SIZE, use_cuda=data_hyperparameters.USE_CUDA):
+    def __init__(self, state_dimension, num_actions, epsilon=data_hyperparameters.INITIAL_EPSILON,
+                 discount_factor=data_hyperparameters.DISCOUNT_FACTOR, hidden_size=data_hyperparameters.HIDDEN_SIZE,
+                 use_cuda=data_hyperparameters.USE_CUDA):
         self.epsilon = epsilon
         self.discount_factor = discount_factor
         self.state_dimension = state_dimension
@@ -251,7 +253,8 @@ class DuellingDQN:
 
 
 class TDLearner:
-    def __init__(self, epsilon, discount_factor, num_actions, network, use_cuda=False):
+    def __init__(self, num_actions, network, epsilon=data_hyperparameters.EPSILON,
+                 discount_factor=data_hyperparameters.DISCOUNT_FACTOR, use_cuda=data_hyperparameters.USE_CUDA):
         self.epsilon = epsilon
         self.discount_factor = discount_factor
         self.num_actions = num_actions
@@ -262,7 +265,7 @@ class TDLearner:
             self.network.cuda()
 
     def get_value(self, state):
-        raise NotImplementedError('This class method should not be directly called')
+        raise NotImplementedError('Do not call get_value() on abstract class; make sure to override it in subclass')
 
     def compute_temporal_difference_loss(self, states, actions, rewards, next_states, dones):
         states = torch.tensor(states, dtype=torch.float32, device=self.device)
@@ -305,12 +308,12 @@ class EVSARSALearner(TDLearner):
         with torch.no_grad():
             action_values = self.network(states)
         max_actions = torch.argmax(action_values, dim=1)[0]
-        return self.epsilon * torch.sum(action_values, dim=1) / self.num_actions \
-               + (1 - self.epsilon) * action_values[:, max_actions]
+        return self.epsilon * torch.sum(action_values, dim=1) / self.num_actions + (1 - self.epsilon) * action_values[:,
+                                                                                                        max_actions]
 
 
 class ActorAndCritic:
-    def __init__(self, actor, critic, discount_factor, num_actions,
+    def __init__(self, actor, critic, num_actions, discount_factor=data_hyperparameters.DISCOUNT_FACTOR,
                  entropy_coefficient=data_hyperparameters.ENTROPY_COEFFICIENT, use_cuda=data_hyperparameters.USE_CUDA):
         self.actor = actor
         self.critic = critic

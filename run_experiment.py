@@ -21,7 +21,7 @@ write_log('Environment: {0}'.format('CartPole-v0'), logger)
 write_log('Hyperparameters', logger)
 write_log('num_experiments: {0}'.format(data_hyperparameters.NUM_EXPERIMENTS), logger)
 write_log('epsilon: {0}'.format(data_hyperparameters.EPSILON), logger)
-write_log('decay_factor: {0}'.format(data_hyperparameters.DECAY_FACTOR), logger)
+write_log('discount_factor: {0}'.format(data_hyperparameters.DISCOUNT_FACTOR), logger)
 write_log('epsilon_decay_factor: {0}'.format(data_hyperparameters.EPSILON_DECAY_FACTOR), logger)
 write_log('num_episodes: {0}'.format(data_hyperparameters.NUM_EPISODES), logger)
 write_log('num_episodes_for_decay: {0}'.format(data_hyperparameters.NUM_EPISODES_FOR_DECAY), logger)
@@ -31,9 +31,9 @@ for experiment in range(data_hyperparameters.NUM_EXPERIMENTS):
     all_experiment_names.append(experiment_name)
     write_log('Building agent for experiment {0}'.format(experiment_name), logger)
     now = datetime.now()
-    q_agent = model_classes.QLearner(data_hyperparameters.EPSILON, data_hyperparameters.DECAY_FACTOR, n_actions, torch.nn.Sequential(torch.nn.Linear(state_dim, data_hyperparameters.HIDDEN_SIZE), torch.nn.ReLU(True),
+    q_agent = model_classes.QLearner(data_hyperparameters.EPSILON, data_hyperparameters.DISCOUNT_FACTOR, n_actions, torch.nn.Sequential(torch.nn.Linear(state_dim, data_hyperparameters.HIDDEN_SIZE), torch.nn.ReLU(),
                                                                        torch.nn.Linear(data_hyperparameters.HIDDEN_SIZE, data_hyperparameters.HIDDEN_SIZE),
-                                                                       torch.nn.ReLU(True),
+                                                                       torch.nn.ReLU(),
                                                                        torch.nn.Linear(data_hyperparameters.HIDDEN_SIZE, n_actions)))
     all_experiment_rewards.append(run_experiment(cart_pole, q_agent, experiment_name, logger, data_hyperparameters.EPSILON_DECAY_FACTOR,
                                                  data_hyperparameters.NUM_EPISODES, data_hyperparameters.NUM_EPISODES_FOR_DECAY))
@@ -42,10 +42,10 @@ for experiment in range(data_hyperparameters.NUM_EXPERIMENTS):
     all_experiment_names.append(experiment_name)
     write_log('Building agent for experiment {0}'.format(experiment_name), logger)
     now = datetime.now()
-    evsarsa_agent = model_classes.EVSARSALearner(data_hyperparameters.EPSILON, data_hyperparameters.DECAY_FACTOR, n_actions, torch.nn.Sequential(torch.nn.Linear(state_dim, data_hyperparameters.HIDDEN_SIZE),
-                                                                                   torch.nn.ReLU(True),
+    evsarsa_agent = model_classes.EVSARSALearner(data_hyperparameters.EPSILON, data_hyperparameters.DISCOUNT_FACTOR, n_actions, torch.nn.Sequential(torch.nn.Linear(state_dim, data_hyperparameters.HIDDEN_SIZE),
+                                                                                   torch.nn.ReLU(),
                                                                                    torch.nn.Linear(data_hyperparameters.HIDDEN_SIZE, data_hyperparameters.HIDDEN_SIZE),
-                                                                                   torch.nn.ReLU(True),
+                                                                                   torch.nn.ReLU(),
                                                                                    torch.nn.Linear(data_hyperparameters.HIDDEN_SIZE, n_actions)))
     all_experiment_rewards.append(run_experiment(cart_pole, evsarsa_agent, experiment_name, logger,
                                                  data_hyperparameters.EPSILON_DECAY_FACTOR, data_hyperparameters.NUM_EPISODES, data_hyperparameters.NUM_EPISODES_FOR_DECAY))
